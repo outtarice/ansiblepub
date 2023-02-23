@@ -1,0 +1,7 @@
+---
+- name: base
+  hosts: test
+  gather_facts: True
+
+  roles:
+  - postfix

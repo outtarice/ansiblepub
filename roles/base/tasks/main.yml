@@ -1,0 +1,86 @@
+- name: Install base packages
+  register: updatesys
+  apt:
+    update_cache: yes
+    name:
+      - fail2ban
+      - net-tools
+      - sysstat
+      - wget
+      - certbot
+      - sudo
+      - dnsutils
+    state: present
+
+- name: Update sshd_config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    line: "{{ item }}"
+  with_items:
+    - 'PasswordAuthentication no'
+
+- name: set vi
+  lineinfile:
+    path: /etc/profile
+    line: 'set -o vi'
+
+- name: Add user to sudo
+  user:
+    name: "peter"
+    groups: sudo
+    append: yes
+
+- name: enable sudo for peter
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: "{{ item }}"
+  with_items:
+    - 'ALL	ALL=(ALL)	NOPASSWD:ALL'
+
+- name: create /etc/nftables
+  file:
+    path: "/etc/nftables"
+    state: directory
+
+- name: create nftables fail2ban.conf 
+  copy:
+    content: |
+             #!/usr/sbin/nft -f
+
+             # Use ip as fail2ban doesnt support ipv6 yet
+             table ip fail2ban {
+                     chain input {
+                             # Assign a high priority to reject as fast as possible and avoid more complex rule evaluation
+                             type filter hook input priority 100;
+                     }
+             }
+    dest: /etc/nftables/fail2ban.conf
+
+- name: create nftables-common.local 
+  copy:
+    content: |
+             [Init]
+             # Definition of the table used
+             nftables_family = ip
+             nftables_table  = fail2ban
+             # Drop packets
+             blocktype       = drop
+             # Remove nftables prefix. Set names are limited to 15 char so we want them all
+             nftables_set_prefix =
+    dest: /etc/fail2ban/action.d/nftables-common.local
+
+- name: copy jail.local
+  copy:
+    src: files/jail.local
+    dest: /etc/fail2ban/jail.local
+
+- name: copy nftables.conf
+  copy:
+    src: files/nftables.conf
+    dest: /etc/nftables.conf
+
+- name: install letsencrypt cert
+  ansible.builtin.shell:
+    cmd: certbot certonly --standalone -d {{ansible_fqdn}} --non-interactive --agree-tos -m outtarice@gmail.com

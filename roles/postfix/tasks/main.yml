@@ -1,0 +1,11 @@
+- name: update fail2ban for postfix
+  replace:
+    path: /etc/fail2ban/jail.local
+    regexp: '^# postfix marker'
+    replace: 'enabled = true'
+
+- name: update fail2ban for postfix sasl
+  replace:
+    path: /etc/fail2ban/jail.local
+    regexp: '^# postfix sasl marker'
+    replace: 'enabled = true'
