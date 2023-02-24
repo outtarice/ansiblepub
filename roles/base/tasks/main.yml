@@ -81,6 +81,10 @@
     src: files/nftables.conf
     dest: /etc/nftables.conf
 
+- name: enable nftables
+  systemd:
+  enabled: yes
+
 - name: install letsencrypt cert
   ansible.builtin.shell:
     cmd: certbot certonly --standalone -d {{ansible_fqdn}} --non-interactive --agree-tos -m outtarice@gmail.com
