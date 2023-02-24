@@ -83,7 +83,8 @@
 
 - name: enable nftables
   systemd:
-  enabled: yes
+    name: nftables
+    enabled: yes
 
 - name: install letsencrypt cert
   ansible.builtin.shell:
